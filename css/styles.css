@@ -1,0 +1,304 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MFMTWB2DBE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-MFMTWB2DBE');
+    </script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Some Stuff</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4429285203048093"
+     crossorigin="anonymous"></script>
+  <meta name="google-adsense-account" content="ca-pub-4429285203048093">
+  
+  <style>
+    /* Ensure iframe container fills remaining viewport dynamically */
+    #pageFrameContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--background-color, #1a1a2e);
+      z-index: 100;
+      overflow: hidden;
+      display: none;
+    }
+
+    #pageFrame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+    
+    /* Ensure home page can be hidden */
+    #home {
+      position: relative;
+      z-index: 50;
+    }
+    
+    .page {
+      transition: opacity 0.3s ease;
+    }
+    
+    .page.hidden {
+      display: none !important;
+    }
+
+    .navbar {
+      border-bottom: none !important;
+      margin-bottom: 0 !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <span class="logo-text">Some Stuff</span>
+        <span class="logo-subtitle">Educational Lessons</span>
+      </div>
+      <ul class="nav-menu">
+        <li class="nav-item"><a href="#home" class="nav-link active" data-page="home"><i class="fas fa-home"></i> Home</a></li>
+        <li class="nav-item"><a href="#games" class="nav-link" data-page="games"><i class="fas fa-gamepad"></i> G@m3s</a></li>
+        <li class="nav-item"><a href="#proxy" class="nav-link" data-page="proxy"><i class="fas fa-shield-alt"></i> Prxy</a></li>
+        <li class="nav-item"><a href="#vm" class="nav-link" data-page="vm"><i class="fas fa-desktop"></i> VM</a></li>
+        <li class="nav-item"><a href="#tv" class="nav-link" data-page="tv"><i class="fas fa-tv"></i> Live TV</a></li>
+        <li class="nav-item"><a href="#streaming" class="nav-link" data-page="streaming"><i class="fas fa-film"></i> Streaming</a></li>
+      </ul>
+      <div class="hamburger">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Home Page -->
+  <section id="home" class="page active">
+    <div class="hero">
+      <div class="hero-content">
+        <h1 class="hero-title">Welcome to <span class="gradient-text">Some Stuff</span></h1>
+        <p class="hero-description">Your ultimate destination for games, web proxies, and virtual machines</p>
+        <div class="hero-buttons">
+          <button class="btn btn-primary" onclick="showPage('games')"><i class="fas fa-play"></i> Start Gaming</button>
+          <button class="btn btn-secondary" onclick="showPage('proxy')"><i class="fas fa-globe"></i> Browse Web</button>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="floating-card"><i class="fas fa-gamepad"></i></div>
+        <div class="floating-card"><i class="fas fa-shield-alt"></i></div>
+        <div class="floating-card"><i class="fas fa-desktop"></i></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- External Page iframe container -->
+  <section id="pageFrameContainer" class="page hidden">
+    <iframe id="pageFrame" src="" frameborder="0"></iframe>
+  </section>
+
+  <!-- Hash-based page loader & nav -->
+  <script>
+    let accessRestricted = false;
+    const navLinks = document.querySelectorAll('.nav-link');
+
+
+    function showPage(pageId) {
+      console.log('Showing page:', pageId); // Debug log
+
+      if ((pageId === 'vm' || pageId === 'proxy') && accessRestricted) {
+        alert('Access to this page is restricted from your current network.');
+        // Prevent navigation to restricted page
+        // Keep current page displayed, do not change hash
+        return;
+      }
+      
+      const home = document.getElementById('home');
+      const frameContainer = document.getElementById('pageFrameContainer');
+      const frame = document.getElementById('pageFrame');
+
+      if (pageId === 'home') {
+        home.classList.remove('hidden');
+        home.style.display = '';
+        frameContainer.classList.add('hidden');
+        frameContainer.style.display = 'none';
+        frame.src = '';
+        console.log('Switched to home page');
+      } else {
+        home.classList.add('hidden');
+        home.style.display = 'none';
+        frameContainer.classList.remove('hidden');
+        frameContainer.style.display = 'block';
+        adjustIframeHeight();
+        
+        // Set the iframe source based on the page
+        let iframeSrc = '';
+        switch(pageId) {
+          case 'games':
+            iframeSrc = 'game.html';
+            break;
+          case 'vm':
+            iframeSrc = 'vm.html';
+            break;
+          case 'proxy':
+            iframeSrc = 'prxy.html';
+            break;
+          case 'tv':
+            iframeSrc = 'tv.html';
+            break;
+          case 'streaming':
+            iframeSrc = 'streaming.html';
+            break;
+          default:
+            console.error('Unknown page:', pageId);
+            return;
+        }
+        
+        frame.src = iframeSrc;
+        console.log('Loading iframe with src:', iframeSrc);
+        
+        // Add loading indicator
+        frame.onload = function() {
+          console.log('Iframe loaded successfully');
+        };
+        
+        frame.onerror = function() {
+          console.error('Failed to load iframe:', iframeSrc);
+        };
+      }
+
+      // Update navigation active states
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.dataset.page === pageId);
+      });
+      
+      // Update URL hash
+      window.location.hash = pageId;
+    }
+
+    function adjustIframeHeight() {
+      const navbar = document.querySelector('.navbar');
+      const frameContainer = document.getElementById('pageFrameContainer');
+      const frame = document.getElementById('pageFrame');
+
+      if (!navbar || !frameContainer || !frame) return;
+
+      const navbarHeight = navbar.offsetHeight;
+      const viewportHeight = window.innerHeight;
+
+      // Set frame container top and iframe height dynamically
+      frameContainer.style.top = navbarHeight + 'px';
+      frame.style.height = (viewportHeight - navbarHeight) + 'px';
+    }
+
+    // Call initially and on window resize
+    window.addEventListener('load', () => {
+      adjustIframeHeight();
+      fetch('https://somestufflogs.ejgavin11.workers.dev/');
+      setInterval(() => {
+        fetch('https://somestufflogs.ejgavin11.workers.dev/');
+      }, 10 * 60 * 1000); // every 10 minutes
+    });
+    window.addEventListener('resize', adjustIframeHeight);
+
+    // Initialize navigation and page on load
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded, initializing...');
+      
+      const hash = window.location.hash.slice(1);
+      console.log('Current hash:', hash);
+      
+      if (hash && ['home', 'games', 'proxy', 'vm', 'tv', 'streaming'].includes(hash)) {
+        showPage(hash);
+      } else {
+        showPage('home');
+      }
+
+      // Hamburger menu toggle
+      const hamburger = document.querySelector('.hamburger');
+      const navMenu = document.querySelector('.nav-menu');
+      
+      if (hamburger && navMenu) {
+        hamburger.addEventListener('click', () => {
+          hamburger.classList.toggle('active');
+          navMenu.classList.toggle('active');
+        });
+      }
+
+      // Navigation link event listeners
+      navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const pageId = link.dataset.page;
+          console.log('Nav link clicked:', pageId);
+          showPage(pageId);
+          
+          // Close mobile menu if open
+          if (navMenu && navMenu.classList.contains('active')) {
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+          }
+        });
+      });
+    });
+
+    // Handle hash changes (back/forward navigation)
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash.slice(1);
+      console.log('Hash changed to:', hash);
+      if (hash && ['home', 'games', 'proxy', 'vm', 'tv', 'streaming'].includes(hash)) {
+        showPage(hash);
+      }
+    });
+  </script>
+
+</script>
+
+<!-- Service Worker registration/unregistration for proxy mode -->
+<script>
+// Conditionally register or unregister service worker based on hash
+if ('serviceWorker' in navigator) {
+  function updateServiceWorkerRegistration() {
+    const hash = window.location.hash.replace(/^#/, '');
+    if (hash === 'proxy') {
+      // Register service worker for proxy mode
+      navigator.serviceWorker.getRegistration('sw.js').then(function(reg) {
+        if (!reg) {
+          navigator.serviceWorker.register('sw.js').catch(function(e) {
+            console.warn('Service worker registration failed:', e);
+          });
+        }
+      });
+    } else {
+      // Unregister all service workers
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        registrations.forEach(function(reg) {
+          reg.unregister();
+        });
+      });
+    }
+  }
+  // On page load
+  window.addEventListener('load', updateServiceWorkerRegistration);
+  // On hash change
+  window.addEventListener('hashchange', updateServiceWorkerRegistration);
+}
+</script>
+<script src="js/script.js"></script>
+</body>
+</html>
