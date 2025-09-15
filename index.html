@@ -1,81 +1,287 @@
-<script>
-  lucide.createIcons();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Streaming Hub</title>
 
-  const settingsBtn = document.getElementById('settingsBtn');
-  const settingsPopup = document.getElementById('settingsPopup');
-  const closeSettings = document.getElementById('closeSettings');
-  const darkModeToggle = document.getElementById('darkModeToggle');
-  const fullscreenPrefToggle = document.getElementById('fullscreenPrefToggle');
-  const openFullscreenNow = document.getElementById('openFullscreenNow');
-  const resetSettings = document.getElementById('resetSettings');
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-  // Open/Close settings popup
-  settingsBtn.addEventListener('click', () => {
-    settingsPopup.classList.remove('hidden');
-    lucide.createIcons(); // re-render icons inside popup
-  });
-  closeSettings.addEventListener('click', () => settingsPopup.classList.add('hidden'));
+  <style>
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+    .animate-fadeIn { animation: fadeIn 0.25s ease forwards; }
+    .font-inter { font-family: 'Inter', sans-serif; }
+    #seasonList, #episodeList { max-height: 250px; overflow-y: auto; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#0d1117] text-gray-200 font-inter min-h-screen transition-colors duration-300">
 
-  // Load saved preferences
-  const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-  const savedFullscreenPref = localStorage.getItem('fullscreenPref') === 'true';
+  <!-- Header -->
+  <header class="fixed top-0 left-0 w-full z-50 backdrop-blur-xl bg-black/30 border-b border-white/10 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+      <div class="flex items-center gap-2">
+        <i data-lucide="clapperboard" class="w-7 h-7 text-blue-500"></i>
+        <h1 class="text-2xl font-bold tracking-wide">Streaming Hub</h1>
+      </div>
+      <div class="flex-1 flex justify-center">
+        <input id="searchbar" type="text" placeholder="Search Movies or TV Shows..." autofocus 
+          class="w-full max-w-lg px-5 py-2 rounded-full bg-white/10 border border-white/20 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-lg" />
+      </div>
+      <button id="settingsBtn" class="p-2 rounded-full hover:bg-white/10 transition">
+        <i data-lucide="settings" class="w-6 h-6"></i>
+      </button>
+    </div>
+  </header>
 
-  if (savedDarkMode) document.documentElement.classList.add('dark');
-  darkModeToggle.checked = savedDarkMode;
-  fullscreenPrefToggle.checked = savedFullscreenPref;
+  <!-- Content -->
+  <main class="pt-28 px-6 pb-10 max-w-7xl mx-auto">
+    <div id="bigDiv" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8"></div>
+  </main>
 
-  // Dark mode toggle
-  darkModeToggle.addEventListener('change', () => {
-    const enabled = darkModeToggle.checked;
-    if (enabled) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
-    localStorage.setItem('darkMode', enabled);
-  });
+  <!-- Settings Popup -->
+  <div id="settingsPopup" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+    <div class="bg-[#161b22] dark:bg-white dark:text-black rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fadeIn transition-colors">
+      <div class="flex items-center justify-between mb-6 border-b border-white/10 pb-3">
+        <h2 class="text-lg font-semibold flex items-center gap-2">
+          <i data-lucide="settings" class="w-5 h-5 text-blue-500"></i> Settings
+        </h2>
+        <button id="closeSettings" class="p-2 hover:bg-white/10 rounded-full transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
 
-  // Fullscreen preference toggle
-  fullscreenPrefToggle.addEventListener('change', () => {
-    localStorage.setItem('fullscreenPref', fullscreenPrefToggle.checked);
-  });
+      <div class="space-y-6">
+        <!-- Dark Mode Toggle -->
+        <div class="flex items-center justify-between">
+          <span class="flex items-center gap-2 font-medium">
+            <i data-lucide="moon" class="w-5 h-5"></i> Dark Mode
+          </span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input id="darkModeToggle" type="checkbox" class="sr-only peer">
+            <div class="w-14 h-8 bg-gray-400 rounded-full peer-focus:outline-none peer-checked:bg-blue-600 transition-colors duration-300">
+              <span class="absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 peer-checked:translate-x-6"></span>
+            </div>
+          </label>
+        </div>
 
-  // Open in fullscreen now
-  function openInFullscreen() {
-    const win = window.open('about:blank', '_blank');
-    if (!win) return;
+        <!-- Fullscreen Preference Toggle -->
+        <div class="flex items-center justify-between">
+          <span class="flex items-center gap-2 font-medium">
+            <i data-lucide="maximize-2" class="w-5 h-5"></i> Always open in Fullscreen
+          </span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input id="fullscreenPrefToggle" type="checkbox" class="sr-only peer">
+            <div class="w-14 h-8 bg-gray-400 rounded-full peer-focus:outline-none peer-checked:bg-blue-600 transition-colors duration-300">
+              <span class="absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 peer-checked:translate-x-6"></span>
+            </div>
+          </label>
+        </div>
 
-    win.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Streaming Hub</title>
-          <style>
-            html,body{margin:0;height:100%;overflow:hidden;background:black;}
-            iframe{border:none;width:100vw;height:100vh;display:block;}
-          </style>
-        </head>
-        <body>
-          <iframe src='${location.href}' allowfullscreen></iframe>
-        </body>
-      </html>
-    `);
-    win.document.close();
+        <!-- Actions -->
+        <div class="space-y-3 border-t border-white/10 pt-4">
+          <button id="openFullscreenNow" class="w-full flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md shadow-md transition">
+            <i data-lucide="play" class="w-5 h-5"></i> Open Now in Fullscreen
+          </button>
 
-    // Request fullscreen after the new window loads
-    win.onload = () => {
-      win.document.documentElement.requestFullscreen?.();
-    };
-  }
+          <button id="resetSettings" class="w-full flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-md shadow-md transition">
+            <i data-lucide="trash-2" class="w-5 h-5"></i> Reset Settings
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  openFullscreenNow.addEventListener('click', openInFullscreen);
+  <!-- TV Modal -->
+  <div id="tvModal" class="hidden fixed inset-0 z-[70] bg-black/70 flex items-center justify-center">
+    <div class="bg-[#161b22] dark:bg-white dark:text-black rounded-2xl p-6 w-full max-w-2xl shadow-2xl animate-fadeIn">
+      <h2 class="text-xl font-semibold mb-4">Select Season & Episode</h2>
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <h3 class="font-medium mb-2">Seasons</h3>
+          <div id="seasonList" class="space-y-2"></div>
+        </div>
+        <div>
+          <h3 class="font-medium mb-2">Episodes</h3>
+          <div id="episodeList" class="space-y-2"></div>
+        </div>
+      </div>
+      <div class="flex justify-end mt-6">
+        <button onclick="closeTVModal()" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-md transition">Close</button>
+      </div>
+    </div>
+  </div>
 
-  // Auto-open if preference is set
-  if (savedFullscreenPref) openInFullscreen();
+  <!-- Iframe Viewer -->
+  <div id="iframeContainer" class="hidden fixed inset-0 z-[80] bg-black flex flex-col">
+    <div class="flex items-center justify-between p-4 bg-black/80">
+      <h2 id="iframeTitle" class="text-white font-semibold"></h2>
+      <button onclick="closeIframe()" class="p-2 bg-red-600 hover:bg-red-500 text-white rounded-md">Close</button>
+    </div>
+    <iframe id="fullscreenIframe" class="flex-1 w-full border-none"></iframe>
+  </div>
 
-  // Reset settings
-  resetSettings.addEventListener('click', () => {
-    localStorage.clear();
-    darkModeToggle.checked = false;
-    fullscreenPrefToggle.checked = false;
-    document.documentElement.classList.remove('dark');
-    alert('Settings reset successfully!');
-  });
-</script>
+  <!-- Main Script -->
+  <script>
+    lucide.createIcons();
+
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsPopup = document.getElementById('settingsPopup');
+    const closeSettings = document.getElementById('closeSettings');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const fullscreenPrefToggle = document.getElementById('fullscreenPrefToggle');
+    const openFullscreenNow = document.getElementById('openFullscreenNow');
+    const resetSettings = document.getElementById('resetSettings');
+
+    settingsBtn.addEventListener('click', () => {
+      settingsPopup.classList.remove('hidden');
+      lucide.createIcons();
+    });
+    closeSettings.addEventListener('click', () => settingsPopup.classList.add('hidden'));
+
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+    const savedFullscreenPref = localStorage.getItem('fullscreenPref') === 'true';
+
+    if (savedDarkMode) document.documentElement.classList.add('dark');
+    darkModeToggle.checked = savedDarkMode;
+    fullscreenPrefToggle.checked = savedFullscreenPref;
+
+    darkModeToggle.addEventListener('change', () => {
+      const enabled = darkModeToggle.checked;
+      if (enabled) document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+      localStorage.setItem('darkMode', enabled);
+    });
+
+    fullscreenPrefToggle.addEventListener('change', () => {
+      localStorage.setItem('fullscreenPref', fullscreenPrefToggle.checked);
+    });
+
+    function openInFullscreen() {
+      const win = window.open('about:blank', '_blank');
+      if (!win) return;
+      win.document.write(`<!DOCTYPE html><html><head><title>Streaming Hub</title><style>html,body{margin:0;height:100%;overflow:hidden;background:black;}iframe{border:none;width:100vw;height:100vh;display:block;}</style></head><body><iframe src='${location.href}' allowfullscreen></iframe></body></html>`);
+      win.document.close();
+      win.onload = () => win.document.documentElement.requestFullscreen?.();
+    }
+
+    openFullscreenNow.addEventListener('click', openInFullscreen);
+    if (savedFullscreenPref) openInFullscreen();
+
+    resetSettings.addEventListener('click', () => {
+      localStorage.clear();
+      darkModeToggle.checked = false;
+      fullscreenPrefToggle.checked = false;
+      document.documentElement.classList.remove('dark');
+      alert('Settings reset successfully!');
+    });
+
+    const bigDiv = document.getElementById("bigDiv");
+    const searchBar = document.getElementById("searchbar");
+    const iframeContainer = document.getElementById("iframeContainer");
+    const fullscreenIframe = document.getElementById("fullscreenIframe");
+    const iframeTitle = document.getElementById("iframeTitle");
+
+    const tvModal = document.getElementById("tvModal");
+    const seasonList = document.getElementById("seasonList");
+    const episodeList = document.getElementById("episodeList");
+
+    let currentTV = null;
+    let currentTitle = null;
+
+    async function loadHomeContent() {
+      try {
+        bigDiv.innerHTML = `<div class='col-span-full flex justify-center py-10'><div class='animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full'></div></div>`;
+        const res = await fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=9a2954cb0084e80efa20b3729db69067`);
+        const data = await res.json();
+        displayResults(data.results || []);
+      } catch (err) { console.error(err); }
+    }
+
+    async function searchMedia(query) {
+      try {
+        bigDiv.innerHTML = `<div class='col-span-full flex justify-center py-10'><div class='animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full'></div></div>`;
+        const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=9a2954cb0084e80efa20b3729db69067&query=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        displayResults(data.results || []);
+      } catch(err) { console.error(err); }
+    }
+
+    function displayResults(results) {
+      bigDiv.innerHTML = "";
+      if (!results.length) {
+        bigDiv.innerHTML = "<p class='col-span-full text-center text-gray-400'>No results found.</p>";
+        return;
+      }
+      results.forEach(item => {
+        if (!item.poster_path) return;
+        const poster = `https://image.tmdb.org/t/p/w500/${item.poster_path}`;
+        const rating = item.vote_average ? `★ ${Math.round(item.vote_average*10)/10}` : "";
+        const year = item.release_date ? item.release_date.slice(0,4) : item.first_air_date ? item.first_air_date.slice(0,4) : "N/A";
+
+        const card = document.createElement("div");
+        card.className = "cursor-pointer";
+        card.innerHTML = `
+          <div class="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition transform hover:scale-105">
+            <img src="${poster}" alt="${item.title || item.name}" class="w-full h-72 object-cover">
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex flex-col justify-end p-3">
+              <h3 class="text-sm font-semibold">${item.title || item.name}</h3>
+              <div class="flex justify-between text-xs text-gray-300 mt-1">
+                <span class="bg-black/50 px-2 py-0.5 rounded">${rating}</span>
+                <span class="bg-black/50 px-2 py-0.5 rounded">${year}</span>
+              </div>
+            </div>
+          </div>`;
+        card.addEventListener("click", () => {
+          if(item.media_type === "tv") showTVModal(item.id, item.name || item.title);
+          else openIframe(`https://stuffgoogle.vercel.app/W/customsource?id=${item.id}&type=movie`, item.title || item.name);
+        });
+        bigDiv.appendChild(card);
+      });
+    }
+
+    async function showTVModal(tvId, title) {
+      currentTV = tvId; currentTitle = title;
+      seasonList.innerHTML = ""; episodeList.innerHTML = "";
+      tvModal.classList.remove("hidden");
+      try {
+        const res = await fetch(`https://api.themoviedb.org/3/tv/${tvId}?api_key=9a2954cb0084e80efa20b3729db69067`);
+        const show = await res.json();
+        const seasons = show.seasons.filter(s => s.season_number > 0);
+        seasons.forEach(s => {
+          const btn = document.createElement("button");
+          btn.textContent = `Season ${s.season_number}`;
+          btn.className = "w-full text-left px-4 py-2 rounded-md bg-white/10 hover:bg-blue-600 hover:text-white transition";
+          btn.addEventListener("click", () => loadEpisodes(tvId, s.season_number, btn));
+          seasonList.appendChild(btn);
+        });
+        if(seasons.length) loadEpisodes(tvId, seasons[0].season_number, seasonList.firstChild);
+      } catch(err) { console.error(err); }
+    }
+
+    async function loadEpisodes(tvId, seasonNumber, activeBtn) {
+      Array.from(seasonList.children).forEach(b => b.classList.remove("bg-blue-600", "text-white"));
+      activeBtn.classList.add("bg-blue-600", "text-white");
+      episodeList.innerHTML = "";
+      try {
+        const res = await fetch(`https://api.themoviedb.org/3/tv/${tvId}/season/${seasonNumber}?api_key=9a2954cb0084e80efa20b3729db69067`);
+        const seasonData = await res.json();
+        seasonData.episodes.forEach(ep => {
+          const btn = document.createElement("button");
+          btn.textContent = `Episode ${ep.episode_number}: ${ep.name}`;
+          btn.className = "w-full text-left px-4 py-2 rounded-md bg-white/10 hover:bg-blue-600 hover:text-white transition";
+          btn.addEventListener("click", () => {
+            const url = `https://stuffgoogle.vercel.app/W/customsource?id=${tvId}&type=tv&season=${seasonNumber}&episode=${ep.episode_number}`;
+            openIframe(url, `${currentTitle} - S${seasonNumber}E${ep.episode_number}`);
+            closeTVModal();
+          });
+          episodeList.appendChild(btn);
+        });
+      } catch(err) { console.error(err); }
+    }
+
+    function closeTVModal() {
+      tvModal.classList.add("hidden");
+      seasonList.innerHTML = ""; episode
