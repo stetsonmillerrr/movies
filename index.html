@@ -1,298 +1,250 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MFMTWB2DBE"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-MFMTWB2DBE');
-  </script>
 
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Streaming Hub</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MFMTWB2DBE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+      gtag('config', 'G-MFMTWB2DBE');
+    </script>
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Streaming</title>
+<link rel="stylesheet" href="css/styles.css" />
+<script src="js/streaming.js" defer></script>
+<style>
+  /* Body and header */
+  body {
+    background-color: #121212;
+    color: #c9d1d9;
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
+  header {
+    background: #161b22;
+    padding: 20px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 2px solid #2f81f7;
+  }
+  #searchbar {
+    width: 60%;
+    max-width: 400px;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    font-size: 16px;
+  }
 
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.98); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    .animate-fadeIn { animation: fadeIn 0.3s ease forwards; }
-  </style>
+  /* Results Grid */
+  #bigDiv {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px;
+    gap: 20px;
+  }
+
+  .result-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    width: 180px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .result-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  }
+
+  .poster-container img {
+    width: 100%;
+    border-bottom: 1px solid #30363d;
+  }
+
+  .card-info {
+    padding: 0.6rem;
+  }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2f81f7;
+    margin: 0 0 0.3rem 0;
+  }
+
+  .card-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #8b949e;
+  }
+
+  /* Fullscreen iframe modal */
+  #iframeContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #0d1117;
+    display: none;
+    flex-direction: column;
+    z-index: 9999;
+  }
+
+  #iframeTopBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #161b22;
+    padding: 0.8rem 1rem;
+    border-bottom: 2px solid #2f81f7;
+  }
+
+  #iframeTopBar h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #2f81f7;
+  }
+
+  #iframeTopBar button {
+    background: none;
+    border: 1px solid #2f81f7;
+    color: #2f81f7;
+    border-radius: 6px;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  #iframeTopBar button:hover {
+    background: #2f81f7;
+    color: #fff;
+  }
+
+  #fullscreenIframe {
+    flex: 1;
+    width: 100%;
+    border: none;
+  }
+
+  /* TV Modal with seasons/episodes (no middle bar) */
+  #tvModal {
+    display: none;
+    position: fixed;
+    top:0; left:0; width:100vw; height:100vh;
+    background: rgba(0,0,0,0.95);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+  }
+  #tvModal .modal-content {
+    background: #161b22;
+    padding: 20px;
+    border-radius: 12px;
+    width: 500px;
+    max-width: 90vw;
+    display: flex;
+    color: white;
+    height: 400px;
+  }
+  #tvModal .seasons {
+    width: 40%;
+    overflow-y: auto;
+  }
+  #tvModal .seasons button {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 6px;
+    border: none;
+    background: #2a2a2a;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  #tvModal .seasons button:hover,
+  #tvModal .seasons button.active {
+    background: #2f81f7;
+    color: white;
+  }
+  #tvModal .episodes {
+    width: 60%;
+    padding-left: 10px;
+    overflow-y: auto;
+  }
+  #tvModal .episodes button {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 6px;
+    border: none;
+    background: #2a2a2a;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  #tvModal .episodes button:hover {
+    background: #2f81f7;
+  }
+  #tvModal .closeBtn {
+    position: absolute;
+    top: 10px; right: 15px;
+    background: #333;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+</style>
 </head>
-<body class="bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#0d1117] text-gray-200 min-h-screen">
+<body>
+<header>
+  <h1>Streaming Hub</h1>
+  <input id="searchbar" type="text" placeholder="Search Movies or TV Shows..." autofocus />
+</header>
 
-  <!-- Header -->
-  <header class="fixed top-0 left-0 w-full z-50 backdrop-blur-xl bg-black/30 border-b border-white/10">
-    <div class="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-      <div class="flex items-center gap-2">
-        <i data-lucide="clapperboard" class="w-7 h-7 text-blue-500"></i>
-        <h1 class="text-2xl font-bold text-white tracking-wide">Streaming Hub</h1>
-      </div>
-      <div class="flex-1 flex justify-center">
-        <input id="searchbar" type="text" placeholder="Search Movies or TV Shows..."
-          class="w-full max-w-lg px-5 py-2 rounded-full bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-lg" />
-      </div>
-      <button id="watchlistButton" class="p-2 rounded-full hover:bg-white/10 transition">
-        <i data-lucide="bookmark" class="w-6 h-6"></i>
-      </button>
-      <button class="p-2 rounded-full hover:bg-white/10 transition">
-        <i data-lucide="settings" class="w-6 h-6"></i>
-      </button>
-    </div>
-  </header>
+<div id="bigDiv"></div>
 
-  <!-- Main Content -->
-  <main class="pt-28 px-6 pb-10 max-w-7xl mx-auto">
-    <div id="bigDiv" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8"></div>
-  </main>
-
-  <!-- Watchlist Modal -->
-  <div id="watchlistModal" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center animate-fadeIn">
-    <button class="absolute top-6 right-8 flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md shadow-lg transition" onclick="closeWatchlistModal()">
-      <i data-lucide="x" class="w-5 h-5"></i> Close
-    </button>
-    <div class="bg-[#161b22] rounded-2xl p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto shadow-2xl">
-      <h2 class="text-2xl text-white mb-4">Your Watchlist</h2>
-      <div id="watchlistItems" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
-    </div>
+<!-- TV Modal for Season/Episode selection -->
+<div id="tvModal">
+  <button class="closeBtn" onclick="closeTvModal()">Close</button>
+  <div class="modal-content">
+    <div class="seasons" id="seasonList"></div>
+    <div class="episodes" id="episodeList"></div>
   </div>
+</div>
 
-  <!-- TV Modal -->
-  <div id="tvModal" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center animate-fadeIn">
-    <button class="absolute top-6 right-8 flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md shadow-lg transition" onclick="closeTvModal()">
-      <i data-lucide="x" class="w-5 h-5"></i> Close
-    </button>
-    <div class="bg-[#161b22] rounded-2xl p-6 w-full max-w-4xl h-[75vh] flex gap-6 overflow-hidden shadow-2xl">
-      <div id="seasonList" class="w-2/5 space-y-2 overflow-y-auto pr-2"></div>
-      <div id="episodeList" class="w-3/5 space-y-2 overflow-y-auto"></div>
-    </div>
+<!-- Fullscreen iframe modal -->
+<div id="iframeContainer">
+  <div id="iframeTopBar">
+    <h2 id="iframeTitle">Now Playing</h2>
+    <button onclick="closeIframe()">Close</button>
   </div>
+  <iframe id="fullscreenIframe" allowfullscreen></iframe>
+</div>
 
-  <!-- Fullscreen iframe modal -->
-  <div id="iframeContainer" class="hidden fixed inset-0 z-50 flex flex-col bg-black animate-fadeIn">
-    <div class="flex items-center justify-between px-6 py-4 bg-black/40 backdrop-blur-md border-b border-blue-600">
-      <div class="flex items-center gap-2">
-        <i data-lucide="play-circle" class="w-6 h-6 text-blue-500"></i>
-        <h2 id="iframeTitle" class="text-lg font-semibold text-white">Now Playing</h2>
-      </div>
-      <button onclick="closeIframe()" class="flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md shadow-md transition">
-        <i data-lucide="x" class="w-5 h-5"></i> Close
-      </button>
-    </div>
-    <iframe id="fullscreenIframe" class="flex-1 w-full border-none" allowfullscreen></iframe>
+<!-- TV Modal -->
+<div id="tvModal">
+  <button class="closeBtn" onclick="closeTVModal()">Close</button>
+  <div class="modal-content">
+    <div class="seasons" id="seasonList"></div>
+    <div class="episodes" id="episodeList"></div>
   </div>
+</div>
 
-  <script src="js/streaming.js"></script>
-  <script>
-    // After your existing streaming.js loads, we attach additional logic for watchlist, modals, etc.
-
-    lucide.createIcons();
-
-    const WATCHLIST_KEY = "streaming_hub_watchlist";
-
-    function getWatchlist() {
-      const d = localStorage.getItem(WATCHLIST_KEY);
-      return d ? JSON.parse(d) : [];
-    }
-    function saveWatchlist(list) {
-      localStorage.setItem(WATCHLIST_KEY, JSON.stringify(list));
-    }
-    function isInWatchlist(item) {
-      const wl = getWatchlist();
-      return wl.some(i => i.id === item.id && i.type === item.type);
-    }
-    function addToWatchlist(item) {
-      const wl = getWatchlist();
-      if (!isInWatchlist(item)) {
-        wl.push(item);
-        saveWatchlist(wl);
-      }
-    }
-    function removeFromWatchlist(item) {
-      let wl = getWatchlist();
-      wl = wl.filter(i => !(i.id === item.id && i.type === item.type));
-      saveWatchlist(wl);
-    }
-
-    function renderCard(item) {
-      const card = document.createElement("div");
-      card.className = "group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer";
-
-      card.innerHTML = `
-        <div class="overflow-hidden">
-          <img src="${item.poster}" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Poster"/>
-        </div>
-        <div class="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center">
-          <div>
-            <h3 class="text-white font-semibold text-sm truncate max-w-xs">${item.title}</h3>
-            <p class="text-gray-400 text-xs">${item.year} • ${item.type === "tv" ? "TV Show" : "Movie"}</p>
-          </div>
-          <button class="watchlist-btn ml-2 p-1 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs">
-            ${ isInWatchlist(item) ? "Remove" : "Watchlist" }
-          </button>
-        </div>
-      `;
-
-      // click image => open iframe or your existing logic
-      card.querySelector('img').addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (typeof openVideo === "function") {
-          // if your streaming.js has a function named openVideo
-          openVideo(item);
-        } else {
-          openIframe(item);
-        }
-      });
-
-      // watchlist button
-      card.querySelector('.watchlist-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (isInWatchlist(item)) {
-          removeFromWatchlist(item);
-          e.target.textContent = "Watchlist";
-        } else {
-          addToWatchlist(item);
-          e.target.textContent = "Remove";
-        }
-      });
-
-      return card;
-    }
-
-    function renderList(items, container) {
-      container.innerHTML = "";
-      items.forEach(item => {
-        const c = renderCard(item);
-        container.appendChild(c);
-      });
-    }
-
-    // Hook into your existing data load
-    function initializeUI(sampleItems) {
-      // sampleItems is the array your streaming.js uses to render cards
-      const bigDiv = document.getElementById("bigDiv");
-      renderList(sampleItems, bigDiv);
-    }
-
-    // Search: hook into your existing search if exists, or do it here
-    document.getElementById("searchbar").addEventListener("input", (e) => {
-      const q = e.target.value.toLowerCase();
-      if (!q) {
-        if (typeof getAllItems === "function") {
-          initializeUI(getAllItems());
-        }
-      } else {
-        let items;
-        if (typeof getAllItems === "function") {
-          items = getAllItems().filter(it => it.title.toLowerCase().includes(q));
-        } else {
-          // fallback sample
-          items = [];
-        }
-        const bigDiv = document.getElementById("bigDiv");
-        renderList(items, bigDiv);
-      }
-    });
-
-    // Watchlist modal
-    document.getElementById("watchlistButton").addEventListener("click", () => {
-      renderWatchlist();
-      openWatchlistModal();
-    });
-    function openWatchlistModal(){
-      document.getElementById("watchlistModal").classList.remove("hidden");
-    }
-    function closeWatchlistModal(){
-      document.getElementById("watchlistModal").classList.add("hidden");
-    }
-    function renderWatchlist(){
-      const items = getWatchlist();
-      const container = document.getElementById("watchlistItems");
-      if (!items || items.length === 0) {
-        container.innerHTML = `<p class="text-gray-400 text-lg">Your watchlist is empty.</p>`;
-      } else {
-        renderList(items, container);
-      }
-    }
-
-    // iframe modal fallback
-    function openIframe(item){
-      const iframeCont = document.getElementById("iframeContainer");
-      const iframe = document.getElementById("fullscreenIframe");
-      const titleEl = document.getElementById("iframeTitle");
-      iframe.src = item.embedUrl || "";  // ensure your data has embedUrl
-      titleEl.textContent = item.title;
-      iframeCont.classList.remove("hidden");
-    }
-    function closeIframe(){
-      const iframe = document.getElementById("fullscreenIframe");
-      iframe.src = "";
-      document.getElementById("iframeContainer").classList.add("hidden");
-    }
-
-    // TV Modal stub fallback (use your existing tv logic)
-    function openTvModal(seasons, episodes){
-      const tvModal = document.getElementById("tvModal");
-      const seasonList = document.getElementById("seasonList");
-      const episodeList = document.getElementById("episodeList");
-      // Clear
-      seasonList.innerHTML = "";
-      episodeList.innerHTML = "";
-
-      if (seasons && seasons.length) {
-        seasons.forEach((s, idx) => {
-          const btn = document.createElement("button");
-          btn.textContent = s.name || `Season ${idx+1}`;
-          btn.addEventListener("click", () => {
-            // when season clicked, show episodes
-            episodeList.innerHTML = "";
-            (s.episodes || []).forEach(ep => {
-              const epBtn = document.createElement("button");
-              epBtn.textContent = ep.name || ep.title || `Ep ${ep.number}`;
-              epBtn.addEventListener("click", () => {
-                if (typeof playEpisode === "function") {
-                  playEpisode(s, ep);
-                } else {
-                  openIframe(ep);
-                }
-              });
-              episodeList.appendChild(epBtn);
-            });
-          });
-          seasonList.appendChild(btn);
-        });
-
-        // optionally auto-click first season
-        seasonList.querySelector("button")?.click();
-      }
-      tvModal.classList.remove("hidden");
-    }
-    function closeTvModal(){
-      document.getElementById("tvModal").classList.add("hidden");
-    }
-
-    // When streaming.js finishes loading its data, it should call a callback like this:
-    document.addEventListener("DOMContentLoaded", () => {
-      if (typeof loadItems === "function") {
-        // Suppose your streaming.js defines loadItems() which returns an array, or populates a global
-        const items = loadItems();  
-        initializeUI(items);
-      }
-    });
-
-  </script>
 </body>
 </html>
