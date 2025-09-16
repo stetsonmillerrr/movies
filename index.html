@@ -1,1 +1,421 @@
-<!DOCTYPE html> <html lang="en"> <head> <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-MFMTWB2DBE"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-MFMTWB2DBE'); </script> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0"/> <title>Streaming Hub</title> <!-- Tailwind CSS --> <script src="https://cdn.tailwindcss.com"></script> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"> <script src="https://unpkg.com/lucide@latest"></script> <script src="js/streaming.js" defer></script> <style> @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } } .animate-fadeIn { animation: fadeIn 0.25s ease forwards; } .font-inter { font-family: 'Inter', sans-serif; } </style> </head> <body class="bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#0d1117] text-gray-200 font-inter min-h-screen transition-colors duration-300"> <!-- Header --> <header class="fixed top-0 left-0 w-full z-50 backdrop-blur-xl bg-black/30 border-b border-white/10 transition-colors duration-300"> <div class="max-w-7xl mx-auto flex items-center justify-between px-6 py-4"> <div class="flex items-center gap-2"> <i data-lucide="clapperboard" class="w-7 h-7 text-blue-500"></i> <h1 class="text-2xl font-bold tracking-wide">Streaming Hub</h1> </div> <div class="flex-1 flex justify-center"> <input id="searchbar" type="text" placeholder="Search Movies or TV Shows..." autofocus class="w-full max-w-lg px-5 py-2 rounded-full bg-white/10 border border-white/20 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-lg" /> </div> <button id="settingsBtn" class="p-2 rounded-full hover:bg-white/10 transition"> <i data-lucide="settings" class="w-6 h-6"></i> </button> </div> </header> <!-- Content --> <main class="pt-28 px-6 pb-10 max-w-7xl mx-auto"> <div id="bigDiv" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8"> <!-- JS will inject cards here --> </div> </main> <!-- Settings Popup --> <div id="settingsPopup" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50"> <div class="bg-[#161b22] dark:bg-white dark:text-black rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fadeIn transition-colors"> <div class="flex items-center justify-between mb-6 border-b border-white/10 pb-3"> <h2 class="text-lg font-semibold flex items-center gap-2"> <i data-lucide="settings" class="w-5 h-5 text-blue-500"></i> Settings </h2> <button id="closeSettings" class="p-2 hover:bg-white/10 rounded-full transition"> <i data-lucide="x" class="w-5 h-5"></i> </button> </div> <div class="space-y-6"> <!-- Dark Mode Toggle --> <div class="flex items-center justify-between"> <span class="flex items-center gap-2 font-medium"> <i data-lucide="moon" class="w-5 h-5"></i> Dark Mode </span> <label class="inline-flex items-center cursor-pointer"> <input id="darkModeToggle" type="checkbox" class="sr-only peer"> <div class="w-12 h-7 bg-gray-400 rounded-full peer-checked:bg-blue-600 relative transition"> <div class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div> </div> </label> </div> <!-- Fullscreen Preference Toggle --> <div class="flex items-center justify-between"> <span class="flex items-center gap-2 font-medium"> <i data-lucide="maximize-2" class="w-5 h-5"></i> Always open in Fullscreen </span> <label class="inline-flex items-center cursor-pointer"> <input id="fullscreenPrefToggle" type="checkbox" class="sr-only peer"> <div class="w-12 h-7 bg-gray-400 rounded-full peer-checked:bg-blue-600 relative transition"> <div class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div> </div> </label> </div> <!-- Actions --> <div class="space-y-3 border-t border-white/10 pt-4"> <button id="openFullscreenNow" class="w-full flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md shadow-md transition"> <i data-lucide="play" class="w-5 h-5"></i> Open Now in Fullscreen </button> <button id="resetSettings" class="w-full flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-md shadow-md transition"> <i data-lucide="trash-2" class="w-5 h-5"></i> Reset Settings </button> </div> </div> </div> </div> <script> lucide.createIcons(); const settingsBtn = document.getElementById('settingsBtn'); const settingsPopup = document.getElementById('settingsPopup'); const closeSettings = document.getElementById('closeSettings'); const darkModeToggle = document.getElementById('darkModeToggle'); const fullscreenPrefToggle = document.getElementById('fullscreenPrefToggle'); const openFullscreenNow = document.getElementById('openFullscreenNow'); const resetSettings = document.getElementById('resetSettings'); // Open/Close settings popup settingsBtn.addEventListener('click', () => settingsPopup.classList.remove('hidden')); closeSettings.addEventListener('click', () => settingsPopup.classList.add('hidden')); // Load saved preferences const savedDarkMode = localStorage.getItem('darkMode') === 'true'; const savedFullscreenPref = localStorage.getItem('fullscreenPref') === 'true'; if (savedDarkMode) document.body.classList.add('dark'); darkModeToggle.checked = savedDarkMode; fullscreenPrefToggle.checked = savedFullscreenPref; // Dark mode toggle darkModeToggle.addEventListener('change', () => { const enabled = darkModeToggle.checked; if (enabled) document.body.classList.add('dark'); else document.body.classList.remove('dark'); localStorage.setItem('darkMode', enabled); }); // Fullscreen preference toggle fullscreenPrefToggle.addEventListener('change', () => { localStorage.setItem('fullscreenPref', fullscreenPrefToggle.checked); }); // Open in fullscreen now function openInFullscreen() { const win = window.open('about:blank', '_blank'); if (!win) return; win.document.write(<!DOCTYPE html><html><head><title>Streaming Hub</title><style>html,body{margin:0;height:100%;overflow:hidden;background:black;}iframe{border:none;width:100vw;height:100vh;display:block;}</style></head><body><iframe src='${location.href}' allowfullscreen></iframe></body></html>); win.document.close(); win.document.querySelector('iframe').requestFullscreen?.(); } openFullscreenNow.addEventListener('click', openInFullscreen); // Auto-open if preference is set if (savedFullscreenPref) openInFullscreen(); // Reset settings resetSettings.addEventListener('click', () => { localStorage.clear(); darkModeToggle.checked = false; fullscreenPrefToggle.checked = false; document.body.classList.remove('dark'); alert('Settings reset successfully!'); }); </script> </body> </html>
+<html lang="en" class="dark"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Streaming Hub</title>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+body { font-family:'Inter',sans-serif; background:linear-gradient(to bottom,#0d1117,#161b22); transition:background-color 0.3s,color 0.3s; }
+.animate-fadeIn { animation:fadeIn 0.3s ease forwards; }
+@keyframes fadeIn { from { opacity:0; transform:scale(0.98);} to { opacity:1; transform:scale(1);} }
+
+.toggle { display:flex; align-items:center; gap:0.5rem; }
+.checkbox:checked ~ .dot { transform: translateX(100%); }
+.block { transition: background-color 0.3s; }
+.dot { transition: transform 0.3s, background-color 0.3s; }
+.dark body { background:#0f1115; color:#e2e8f0; }
+.card-title { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.card-footer { position:absolute; bottom:0; left:0; width:100%; display:flex; justify-content:space-between; align-items:center; padding:0.5rem; background:linear-gradient(to top,rgba(0,0,0,0.8),transparent); }
+.rating { background:rgba(0,0,0,0.6); padding:0.1rem 0.4rem; border-radius:4px; font-size:0.75rem; color:#fff; }
+.category-btn { padding:0.5rem 1rem; border-radius:9999px; border:1px solid #555; cursor:pointer; transition:all 0.2s; }
+.category-btn:hover, .category-btn.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+.carousel { position:relative; overflow:hidden; border-radius:1rem; }
+.carousel-track { display:flex; transition:transform 0.5s ease; }
+.carousel-slide { min-width:100%; position:relative; cursor:pointer; }
+.carousel-slide img { width:100%; height:400px; object-fit:cover; border-radius:1rem; transition:transform 0.5s; }
+.carousel-button { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.5); border:none; padding:0.5rem; cursor:pointer; border-radius:9999px; }
+.carousel-button.prev { left:1rem; }
+.carousel-button.next { right:1rem; }
+</style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0px}.left-0{left:0px}.left-1{left:0.25rem}.right-8{right:2rem}.top-0{top:0px}.top-1{top:0.25rem}.top-6{top:1.5rem}.right-2{right:0.5rem}.top-2{top:0.5rem}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-5{height:1.25rem}.h-6{height:1.5rem}.h-7{height:1.75rem}.h-8{height:2rem}.h-72{height:18rem}.min-h-screen{min-height:100vh}.w-14{width:3.5rem}.w-5{width:1.25rem}.w-6{width:1.5rem}.w-7{width:1.75rem}.w-full{width:100%}.max-w-7xl{max-width:80rem}.max-w-lg{max-width:32rem}.max-w-md{max-width:28rem}.max-w-\[70\%\]{max-width:70%}.flex-1{flex:1 1 0%}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-2{gap:0.5rem}.gap-3{gap:0.75rem}.gap-8{gap:2rem}.space-y-6 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.5rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-md{border-radius:0.375rem}.border{border-width:1px}.border-\[1px\]{border-width:1px}.border-b{border-bottom-width:1px}.border-none{border-style:none}.border-blue-600{--tw-border-opacity:1;border-color:rgb(37 99 235 / var(--tw-border-opacity, 1))}.border-gray-900{--tw-border-opacity:1;border-color:rgb(17 24 39 / var(--tw-border-opacity, 1))}.border-white\/10{border-color:rgb(255 255 255 / 0.1)}.border-white\/20{border-color:rgb(255 255 255 / 0.2)}.bg-\[\#161b22\]{--tw-bg-opacity:1;background-color:rgb(22 27 34 / var(--tw-bg-opacity, 1))}.bg-black{--tw-bg-opacity:1;background-color:rgb(0 0 0 / var(--tw-bg-opacity, 1))}.bg-black\/30{background-color:rgb(0 0 0 / 0.3)}.bg-black\/40{background-color:rgb(0 0 0 / 0.4)}.bg-black\/80{background-color:rgb(0 0 0 / 0.8)}.bg-blue-600{--tw-bg-opacity:1;background-color:rgb(37 99 235 / var(--tw-bg-opacity, 1))}.bg-gray-800{--tw-bg-opacity:1;background-color:rgb(31 41 55 / var(--tw-bg-opacity, 1))}.bg-white\/10{background-color:rgb(255 255 255 / 0.1)}.bg-white\/5{background-color:rgb(255 255 255 / 0.05)}.object-cover{object-fit:cover}.p-2{padding:0.5rem}.p-6{padding:1.5rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-4{padding-top:1rem;padding-bottom:1rem}.pb-10{padding-bottom:2.5rem}.pt-32{padding-top:8rem}.text-2xl{font-size:1.5rem;line-height:2rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-semibold{font-weight:600}.tracking-wide{letter-spacing:0.025em}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246 / var(--tw-text-opacity, 1))}.text-gray-200{--tw-text-opacity:1;color:rgb(229 231 235 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.placeholder-gray-400::placeholder{--tw-placeholder-opacity:1;color:rgb(156 163 175 / var(--tw-placeholder-opacity, 1))}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-xl{--tw-backdrop-blur:blur(24px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-500{transition-duration:500ms}.hover\:-translate-y-2:hover{--tw-translate-y:-0.5rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.hover\:scale-105:hover{--tw-scale-x:1.05;--tw-scale-y:1.05;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.hover\:bg-blue-500:hover{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.hover\:bg-white\/10:hover{background-color:rgb(255 255 255 / 0.1)}.hover\:shadow-blue-500\/30:hover{--tw-shadow-color:rgb(59 130 246 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.focus\:ring-2:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.focus\:ring-blue-500:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(59 130 246 / var(--tw-ring-opacity, 1))}.group:hover .group-hover\:scale-110{--tw-scale-x:1.1;--tw-scale-y:1.1;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@media (min-width: 640px){.sm\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}}@media (min-width: 768px){.md\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}}@media (min-width: 1024px){.lg\:grid-cols-6{grid-template-columns:repeat(6, minmax(0, 1fr))}}@media (prefers-color-scheme: dark){.dark\:border-white{--tw-border-opacity:1;border-color:rgb(255 255 255 / var(--tw-border-opacity, 1))}.dark\:bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}}</style></head>
+<body class="text-gray-200 min-h-screen">
+
+<!-- Header -->
+<header class="fixed top-0 left-0 w-full z-50 backdrop-blur-xl bg-black/30 border-b border-white/10 shadow-md">
+  <div class="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+    <div class="flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="clapperboard" class="lucide lucide-clapperboard w-7 h-7 text-blue-500"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"></path><path d="m6.2 5.3 3.1 3.9"></path><path d="m12.4 3.4 3.1 4"></path><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"></path></svg>
+      <h1 class="text-2xl font-bold text-white tracking-wide">Streaming Hub</h1>
+    </div>
+    <div class="flex-1 flex justify-center">
+      <input id="searchbar" type="text" placeholder="Search Movies or TV Shows..." class="w-full max-w-lg px-5 py-2 rounded-full bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-md">
+    </div>
+    <div class="flex gap-3 items-center">
+      <button id="settingsButton" class="p-2 rounded-full hover:bg-white/10 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="settings" class="lucide lucide-settings w-6 h-6"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="pt-32 px-6 pb-10 max-w-7xl mx-auto space-y-6">
+
+  <!-- Carousel -->
+  <div id="carousel" class="carousel mb-6">
+    <button class="carousel-button prev"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-left" class="lucide lucide-chevron-left w-6 h-6 text-white"><path d="m15 18-6-6 6-6"></path></svg></button>
+    <div class="carousel-track" style="transform: translateX(0%);"><div class="carousel-slide"><img src="https://image.tmdb.org/t/p/original//aFRDH3P7TX61FVGpaLhKr6QiOC1.jpg" alt="Demon Slayer: Kimetsu no Yaiba Infinity Castle"></div><div class="carousel-slide"><img src="https://image.tmdb.org/t/p/original//cpf7vsRZ0MYRQcnLWteD5jK9ymT.jpg" alt="Weapons"></div><div class="carousel-slide"><img src="https://image.tmdb.org/t/p/original//wPLysNDLffQLOVebZQCbXJEv6E6.jpg" alt="Superman"></div><div class="carousel-slide"><img src="https://image.tmdb.org/t/p/original//29ES27icY5CzTcMhlz1H4SdQRod.jpg" alt="The Conjuring: Last Rites"></div><div class="carousel-slide"><img src="https://image.tmdb.org/t/p/original//aq0JMbmSfPwG8JvAzExJPrBHqmG.jpg" alt="The Naked Gun"></div></div>
+    <button class="carousel-button next"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-right" class="lucide lucide-chevron-right w-6 h-6 text-white"><path d="m9 18 6-6-6-6"></path></svg></button>
+  </div>
+
+  <!-- Categories -->
+  <div id="categories" class="flex flex-wrap gap-3 mb-4"><button class="category-btn">Trending</button><button class="category-btn">Top Rated</button><button class="category-btn">Action</button><button class="category-btn">Comedy</button><button class="category-btn">Horror</button><button class="category-btn">Romance</button><button class="category-btn">Documentary</button></div>
+
+  <!-- History Section -->
+  <section>
+    <h2 class="text-xl font-semibold text-white mb-4">Recently Watched</h2>
+    <div id="historyDiv" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8"><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="undefined" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="undefined">
+      <div class="absolute top-2 right-2 rating">undefined</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">undefined</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="undefined" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Weapons">
+      <div class="absolute top-2 right-2 rating">undefined</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">Weapons</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="undefined" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="The Thing Behind The Door">
+      <div class="absolute top-2 right-2 rating">undefined</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">The Thing Behind The Door</h3>
+    </div></div></div>
+  </section>
+
+  <!-- Main Content -->
+  <section>
+    <div id="bigDiv" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8"><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//aFRDH3P7TX61FVGpaLhKr6QiOC1.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Demon Slayer: Kimetsu no Yaiba Infinity Castle">
+      <div class="absolute top-2 right-2 rating">7.6</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">Demon Slayer: Kimetsu no Yaiba Infinity Castle</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//cpf7vsRZ0MYRQcnLWteD5jK9ymT.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Weapons">
+      <div class="absolute top-2 right-2 rating">7.4</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">Weapons</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//wPLysNDLffQLOVebZQCbXJEv6E6.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Superman">
+      <div class="absolute top-2 right-2 rating">7.5</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">Superman</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//29ES27icY5CzTcMhlz1H4SdQRod.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="The Conjuring: Last Rites">
+      <div class="absolute top-2 right-2 rating">6.7</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">The Conjuring: Last Rites</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//aq0JMbmSfPwG8JvAzExJPrBHqmG.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="The Naked Gun">
+      <div class="absolute top-2 right-2 rating">6.7</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">The Naked Gun</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//svXVRoRSu6zzFtCzkRsjZS7Lqpd.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Nobody 2">
+      <div class="absolute top-2 right-2 rating">7.3</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">Nobody 2</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//36xXlhEpQqVVPuiZhfoQuaY4OlA.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Wednesday">
+      <div class="absolute top-2 right-2 rating">8.4</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">Wednesday</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//A0KRoR842OgNByCfw9iFHbWoeR9.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="The Wrong Paris">
+      <div class="absolute top-2 right-2 rating">6.9</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">The Wrong Paris</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//9JdL1aQdAQiyYYQ2xCqbHaEcZt8.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Task">
+      <div class="absolute top-2 right-2 rating">5.3</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">Task</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//xeEw3eLeSFmJgXZzmF2Efww0q3s.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="xXx">
+      <div class="absolute top-2 right-2 rating">6.0</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">xXx</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//yueXS3q8BtoWekcHOATFHicLl3e.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Alien: Earth">
+      <div class="absolute top-2 right-2 rating">7.7</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">Alien: Earth</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//6ZS8SOno6kTmWz4eQ8lX8EBXOMv.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Futurama">
+      <div class="absolute top-2 right-2 rating">8.4</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">Futurama</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//5fhZdwP1DVJ0FyVH6vrFdHwpXIn.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Ted Lasso">
+      <div class="absolute top-2 right-2 rating">8.4</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">Ted Lasso</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//2c6ofLTa5CRfeQjVA1bWiYBdxQN.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="The Studio">
+      <div class="absolute top-2 right-2 rating">7.6</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">The Studio</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//wobVTa99eW0ht6c1rNNzLkazPtR.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="The Long Walk">
+      <div class="absolute top-2 right-2 rating">7.1</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">The Long Walk</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//tDHWWReefmOOjBCJZUck8cNwssk.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Adolescence">
+      <div class="absolute top-2 right-2 rating">7.8</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">Adolescence</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//6fMGktEDXMZZPACJ5cWkVQ6TSte.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="The Pitt">
+      <div class="absolute top-2 right-2 rating">8.6</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">The Pitt</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//yb4F1Oocq8GfQt6iIuAgYEBokhG.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Peacemaker">
+      <div class="absolute top-2 right-2 rating">8.2</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">Peacemaker</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//9PXZIUsSDh4alB80jheWX4fhZmy.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="F1">
+      <div class="absolute top-2 right-2 rating">7.8</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">F1</h3>
+    </div></div><div class="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer"><div class="overflow-hidden relative"><img src="https://image.tmdb.org/t/p/w500//tg9I5pOY4M9CKj8U0cxVBTsm5eh.jpg" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="Foundation">
+      <div class="absolute top-2 right-2 rating">7.7</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">Foundation</h3>
+    </div></div></div>
+  </section>
+
+</main>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center animate-fadeIn">
+  <button class="absolute top-6 right-8 flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md shadow-lg transition" onclick="closeSettingsModal()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="x" class="lucide lucide-x w-5 h-5"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg> Close
+  </button>
+  <div class="bg-[#161b22] rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-6">
+    <h2 class="text-2xl text-white mb-4">Settings</h2>
+
+    <label class="flex items-center cursor-pointer justify-between">
+      <span class="text-white font-medium">Stealth Mode</span>
+      <div class="relative">
+        <input type="checkbox" id="stealthToggle" class="checkbox hidden">
+        <div class="block border-[1px] border-gray-900 dark:border-white w-14 h-8 rounded-full"></div>
+        <div class="dot absolute left-1 top-1 bg-gray-800 dark:bg-white w-6 h-6 rounded-full transition"></div>
+      </div>
+    </label>
+
+    <label class="flex items-center cursor-pointer justify-between">
+      <span class="text-white font-medium" id="darkLabel">Dark Mode</span>
+      <div class="relative">
+        <input type="checkbox" id="darkToggle" class="checkbox hidden">
+        <div class="block border-[1px] border-gray-900 dark:border-white w-14 h-8 rounded-full"></div>
+        <div class="dot absolute left-1 top-1 bg-gray-800 dark:bg-white w-6 h-6 rounded-full transition"></div>
+      </div>
+    </label>
+
+    <label class="flex items-center cursor-pointer justify-between">
+      <span class="text-white font-medium">Notifications</span>
+      <div class="relative">
+        <input type="checkbox" id="notifToggle" class="checkbox hidden">
+        <div class="block border-[1px] border-gray-900 dark:border-white w-14 h-8 rounded-full"></div>
+        <div class="dot absolute left-1 top-1 bg-gray-800 dark:bg-white w-6 h-6 rounded-full transition"></div>
+      </div>
+    </label>
+  </div>
+</div>
+
+<!-- Fullscreen Player -->
+<div id="iframeContainer" class="fixed inset-0 z-50 flex flex-col bg-black animate-fadeIn hidden">
+  <div class="flex items-center justify-between px-6 py-4 bg-black/40 backdrop-blur-md border-b border-blue-600">
+    <div class="flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play-circle" class="lucide lucide-play-circle w-6 h-6 text-blue-500"><path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path><circle cx="12" cy="12" r="10"></circle></svg>
+      <h2 id="iframeTitle" class="text-lg font-semibold text-white">The Thing Behind The Door</h2>
+    </div>
+    <button onclick="closeIframe()" class="flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md shadow-md transition">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="x" class="lucide lucide-x w-5 h-5"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg> Close
+    </button>
+  </div>
+  <iframe id="fullscreenIframe" class="flex-1 w-full border-none" allowfullscreen="" src=""></iframe>
+</div>
+
+<script>
+lucide.createIcons();
+
+// --- Elements ---
+const stealthToggle=document.getElementById("stealthToggle");
+const darkToggle=document.getElementById("darkToggle");
+const notifToggle=document.getElementById("notifToggle");
+const settingsModal=document.getElementById("settingsModal");
+const searchBar=document.getElementById("searchbar");
+const bigDiv=document.getElementById("bigDiv");
+const historyDiv=document.getElementById("historyDiv");
+const iframeContainer=document.getElementById("iframeContainer");
+const fullscreenIframe=document.getElementById("fullscreenIframe");
+const iframeTitle=document.getElementById("iframeTitle");
+const darkLabel=document.getElementById("darkLabel");
+const categoriesDiv=document.getElementById("categories");
+const carouselTrack=document.querySelector(".carousel-track");
+const carousel=document.getElementById("carousel");
+
+// --- LocalStorage Keys ---
+const STEALTH_KEY="streaming_hub_stealth";
+const HISTORY_KEY="streaming_hub_history";
+
+// --- Dark Mode ---
+if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+  document.documentElement.classList.add('dark');
+  darkToggle.checked=true; 
+  darkLabel.textContent="Dark Mode";
+}else darkLabel.textContent="Light Mode";
+darkToggle.addEventListener("change",()=>{
+  document.documentElement.classList.toggle("dark",darkToggle.checked);
+  darkLabel.textContent=darkToggle.checked?"Dark Mode":"Light Mode";
+});
+
+// --- Stealth Mode ---
+function triggerStealthMode() {
+  if(window.location.href==="about:blank")return;
+  const newTab = window.open("about:blank","_blank");
+  if(!newTab) return alert("Pop-up blocked!");
+  newTab.document.write(`<html><body style="margin:0"><iframe src="${window.location.href}" style="width:100%;height:100%;border:none"></iframe></body></html>`);
+  newTab.document.close();
+  window.location.href="https://classroom.google.com";
+}
+const stealthEnabled = localStorage.getItem(STEALTH_KEY)==='true';
+stealthToggle.checked = stealthEnabled;
+if(stealthToggle.checked) triggerStealthMode();
+stealthToggle.addEventListener("change",()=>{ localStorage.setItem(STEALTH_KEY, stealthToggle.checked); if(stealthToggle.checked) triggerStealthMode(); });
+
+// --- Modals ---
+document.getElementById("settingsButton").addEventListener("click",()=>settingsModal.classList.remove("hidden"));
+function closeSettingsModal(){settingsModal.classList.add("hidden");}
+
+function saveHistory(title, url, poster, rating="N/A", media_type="movie"){
+  let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+  history = history.filter(h => h.title !== title);
+  history.unshift({ title, url, poster, rating, media_type, time: Date.now() });
+  if(history.length > 20) history.pop();
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory(){
+  const history=JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");
+  historyDiv.innerHTML="";
+  history.forEach(item=>{
+    const card=document.createElement("div");
+    card.className="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer";
+    card.innerHTML=`<div class="overflow-hidden relative"><img src="${item.poster}" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="${item.title}">
+      <div class="absolute top-2 right-2 rating">${item.rating}</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">${item.title}</h3>
+    </div>`;
+    card.addEventListener("click",()=>openIframe(item.url,item.title));
+    historyDiv.appendChild(card);
+  });
+}
+
+// --- Carousel ---
+let carouselIndex=0; let carouselItems=[];
+function renderCarousel(items){
+  carouselItems=items;
+  carouselTrack.innerHTML="";
+  items.forEach(i=>{
+    const poster=`https://image.tmdb.org/t/p/original/${i.poster_path}`;
+    const slide=document.createElement("div");
+    slide.className="carousel-slide";
+    const img=document.createElement("img");
+    img.src=poster;
+    img.alt=i.title||i.name;
+    slide.appendChild(img);
+    slide.addEventListener("click",()=>openIframe(`https://stuffgoogle.vercel.app/W/customsource?id=${i.id}&type=${i.media_type||'movie'}`,i.title||i.name));
+    carouselTrack.appendChild(slide);
+  });
+  updateCarousel();
+}
+function updateCarousel(){ carouselTrack.style.transform=`translateX(-${carouselIndex*100}%)`; }
+document.querySelector(".carousel-button.prev").addEventListener("click",()=>{ carouselIndex=(carouselIndex-1+carouselItems.length)%carouselItems.length; updateCarousel(); });
+document.querySelector(".carousel-button.next").addEventListener("click",()=>{ carouselIndex=(carouselIndex+1)%carouselItems.length; updateCarousel(); });
+
+// --- Categories ---
+const categories=["Trending","Top Rated","Action","Comedy","Horror","Romance","Documentary"];
+categories.forEach(cat=>{
+  const btn=document.createElement("button");
+  btn.textContent=cat;
+  btn.className="category-btn";
+  btn.addEventListener("click",()=>{ document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active")); btn.classList.add("active"); loadCategory(cat); });
+  categoriesDiv.appendChild(btn);
+});
+
+// --- Fetch & Display ---
+async function fetchCategoryData(category){
+  let url="";
+  switch(category){
+    case "Trending": url="https://api.themoviedb.org/3/trending/all/day?api_key=9a2954cb0084e80efa20b3729db69067"; break;
+    case "Top Rated": url="https://api.themoviedb.org/3/movie/top_rated?api_key=9a2954cb0084e80efa20b3729db69067"; break;
+    default: url=`https://api.themoviedb.org/3/discover/movie?api_key=9a2954cb0084e80efa20b3729db69067&with_genres=${encodeURIComponent(category)}`; break;
+  }
+  const res=await fetch(url); const data=await res.json(); return data.results||[];
+}
+
+async function loadCategory(cat){
+  const results=await fetchCategoryData(cat);
+  displayResults(results);
+  renderCarousel(results.slice(0,5));
+}
+
+async function searchMedia(query){
+  const res=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=9a2954cb0084e80efa20b3729db69067&query=${encodeURIComponent(query)}`);
+  const data=await res.json();
+  displayResults(data.results||[]);
+}
+
+function displayResults(results){
+  bigDiv.innerHTML="";
+  if(!results.length){ bigDiv.innerHTML="<p class='text-center text-gray-400'>No results found.</p>"; return; }
+  results.forEach(item=>{
+    if(!item.poster_path)return;
+    const poster=`https://image.tmdb.org/t/p/w500/${item.poster_path}`;
+    const rating=item.vote_average?item.vote_average.toFixed(1):"N/A";
+    const card=document.createElement("div");
+    card.className="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-blue-500/30 transition transform hover:-translate-y-2 hover:scale-105 cursor-pointer";
+    card.innerHTML=`<div class="overflow-hidden relative"><img src="${poster}" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500" alt="${item.title||item.name}">
+      <div class="absolute top-2 right-2 rating">${rating}</div>
+    </div>
+    <div class="card-footer">
+      <h3 class="card-title text-white font-semibold text-sm truncate max-w-[70%]">${item.title||item.name}</h3>
+    </div>`;
+    card.addEventListener("click",()=>{ openIframe(`https://stuffgoogle.vercel.app/W/customsource?id=${item.id}&type=${item.media_type||'movie'}`,item.title||item.name); saveHistory(item.title||item.name,`https://stuffgoogle.vercel.app/W/customsource?id=${item.id}&type=${item.media_type||'movie'}`,poster,rating,item.media_type||"movie"); });
+    bigDiv.appendChild(card);
+  });
+}
+
+// --- Iframe ---
+function openIframe(url,title){
+  fullscreenIframe.src=url;
+  iframeTitle.textContent=title;
+  iframeContainer.classList.remove("hidden");
+}
+function closeIframe(){
+  fullscreenIframe.src="";
+  iframeContainer.classList.add("hidden");
+}
+
+// --- Search ---
+searchBar.addEventListener("input",()=>{ const val=searchBar.value.trim(); if(val) searchMedia(val); else loadCategory("Trending"); });
+
+// --- Initial Load ---
+renderHistory();
+loadCategory("Trending");
+</script>
+
+
+</body></html>
