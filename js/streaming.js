@@ -10,6 +10,11 @@ const episodeList = document.getElementById("episodeList");
 let currentTV = null;
 let currentTitle = null;
 
+// Tabs
+const moviesTab = document.getElementById("moviesTab");
+const tvTab = document.getElementById("tvTab");
+let activeTab = "movies";
+
 // API base URL
 const apiKey = "9a2954cb0084e80efa20b3729db69067";
 const tmdbUrl = "https://api.themoviedb.org/3";
@@ -30,7 +35,6 @@ const fetchAPI = async (url) => {
 
 // --- Card Creation ---
 const createCard = (item) => {
-  // Normalize fields across TMDB and embed.su
   const poster = item.poster_path
     ? `https://image.tmdb.org/t/p/w500/${item.poster_path}`
     : item.poster || "";
@@ -63,7 +67,6 @@ const createCard = (item) => {
   card.addEventListener("click", () => {
     if (mediaType === "tv") {
       if (useEmbedAPI) {
-        // Directly open embed.su TV (defaulting to season 1 episode 1 if no choice UI)
         const url = generateEmbedUrl(item.id, "tv", 1, 1);
         openIframe(url, `${title} - S1E1`);
       } else {
@@ -96,13 +99,17 @@ const generateEmbedUrl = (id, type, season = null, episode = null) => {
 // --- Load Content ---
 async function loadHomeContent() {
   if (useEmbedAPI) {
-    // Fetch both movie & TV lists
-    const movies = await fetchAPI("https://embed.su/list/movie.json");
-    const tv = await fetchAPI("https://embed.su/list/tv.json");
-    const combined = [...(movies || []), ...(tv || [])];
-    displayResults(combined);
+    const url =
+      activeTab === "movies"
+        ? "https://embed.su/list/movie.json"
+        : "https://embed.su/list/tv.json";
+    const data = await fetchAPI(url);
+    displayResults(data || []);
   } else {
-    const url = `${tmdbUrl}/trending/all/day?api_key=${apiKey}`;
+    const url =
+      activeTab === "movies"
+        ? `${tmdbUrl}/movie/popular?api_key=${apiKey}`
+        : `${tmdbUrl}/tv/popular?api_key=${apiKey}`;
     const data = await fetchAPI(url);
     displayResults(data.results || []);
   }
@@ -110,20 +117,21 @@ async function loadHomeContent() {
 
 async function searchMedia(query) {
   if (useEmbedAPI) {
-    // Embed.su doesn’t support search, so filter client-side
-    const movies = await fetchAPI("https://embed.su/list/movie.json");
-    const tv = await fetchAPI("https://embed.su/list/tv.json");
-    const combined = [...(movies || []), ...(tv || [])];
-    const filtered = combined.filter((item) =>
+    const url =
+      activeTab === "movies"
+        ? "https://embed.su/list/movie.json"
+        : "https://embed.su/list/tv.json";
+    const list = await fetchAPI(url);
+    const filtered = (list || []).filter((item) =>
       (item.title || item.name || "")
         .toLowerCase()
         .includes(query.toLowerCase())
     );
     displayResults(filtered);
   } else {
-    const url = `${tmdbUrl}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(
-      query
-    )}`;
+    const url = `${tmdbUrl}/search/${
+      activeTab === "movies" ? "movie" : "tv"
+    }?api_key=${apiKey}&query=${encodeURIComponent(query)}`;
     const data = await fetchAPI(url);
     displayResults(data.results || []);
   }
@@ -211,6 +219,21 @@ function closeIframe() {
 document.getElementById("apiToggle").addEventListener("change", (e) => {
   useEmbedAPI = e.target.checked;
   console.log(`Using ${useEmbedAPI ? "Embed.su" : "TMDB"} API`);
+  loadHomeContent();
+});
+
+// --- Tabs ---
+moviesTab.addEventListener("click", () => {
+  activeTab = "movies";
+  moviesTab.classList.add("bg-blue-600");
+  tvTab.classList.remove("bg-blue-600");
+  loadHomeContent();
+});
+
+tvTab.addEventListener("click", () => {
+  activeTab = "tv";
+  tvTab.classList.add("bg-blue-600");
+  moviesTab.classList.remove("bg-blue-600");
   loadHomeContent();
 });
 
