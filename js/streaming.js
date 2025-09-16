@@ -24,29 +24,56 @@ const fetchAPI = async (url) => {
   } catch (err) {
     console.error("API Error:", err);
     alert("An error occurred. Please try again later.");
+    return [];
   }
 };
 
+// --- Card Creation ---
 const createCard = (item) => {
-  const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500/${item.poster_path}` : '';
-  const rating = item.vote_average ? `⭐ ${Math.round(item.vote_average * 10) / 10}` : "";
-  const year = item.release_date ? item.release_date.slice(0, 4) : item.first_air_date ? item.first_air_date.slice(0, 4) : "N/A";
-  
+  // Normalize fields across TMDB and embed.su
+  const poster = item.poster_path
+    ? `https://image.tmdb.org/t/p/w500/${item.poster_path}`
+    : item.poster || "";
+
+  const rating = item.vote_average
+    ? `⭐ ${Math.round(item.vote_average * 10) / 10}`
+    : item.rating
+    ? `⭐ ${item.rating}`
+    : "";
+
+  const year = item.release_date
+    ? item.release_date.slice(0, 4)
+    : item.first_air_date
+    ? item.first_air_date.slice(0, 4)
+    : item.year || "N/A";
+
+  const title = item.title || item.name || "Untitled";
+  const mediaType = item.media_type || item.type || "movie";
+
   const card = document.createElement("div");
   card.className = "result-card";
   card.innerHTML = `
-    <div class="poster-container"><img src="${poster}" alt="${item.title || item.name}"></div>
+    <div class="poster-container"><img src="${poster}" alt="${title}"></div>
     <div class="card-info">
-      <div class="card-title">${item.title || item.name}</div>
+      <div class="card-title">${title}</div>
       <div class="card-meta"><span>${rating}</span><span>${year}</span></div>
     </div>
   `;
-  
+
   card.addEventListener("click", () => {
-    if (item.media_type === "tv") showTVModal(item.id, item.name || item.title);
-    else openIframe(generateEmbedUrl(item.id, "movie"));
+    if (mediaType === "tv") {
+      if (useEmbedAPI) {
+        // Directly open embed.su TV (defaulting to season 1 episode 1 if no choice UI)
+        const url = generateEmbedUrl(item.id, "tv", 1, 1);
+        openIframe(url, `${title} - S1E1`);
+      } else {
+        showTVModal(item.id, title);
+      }
+    } else {
+      openIframe(generateEmbedUrl(item.id, "movie"), title);
+    }
   });
-  
+
   return card;
 };
 
@@ -63,33 +90,56 @@ const generateEmbedUrl = (id, type, season = null, episode = null) => {
       return `${tmdbUrl}/tv/${id}/season/${season}?api_key=${apiKey}`;
     }
   }
-  return '';
+  return "";
 };
 
 // --- Load Content ---
 async function loadHomeContent() {
-  const url = `${tmdbUrl}/trending/all/day?api_key=${apiKey}`;
-  const data = await fetchAPI(url);
-  displayResults(data.results || []);
+  if (useEmbedAPI) {
+    // Fetch both movie & TV lists
+    const movies = await fetchAPI("https://embed.su/list/movie.json");
+    const tv = await fetchAPI("https://embed.su/list/tv.json");
+    const combined = [...(movies || []), ...(tv || [])];
+    displayResults(combined);
+  } else {
+    const url = `${tmdbUrl}/trending/all/day?api_key=${apiKey}`;
+    const data = await fetchAPI(url);
+    displayResults(data.results || []);
+  }
 }
 
 async function searchMedia(query) {
-  const url = `${tmdbUrl}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(query)}`;
-  const data = await fetchAPI(url);
-  displayResults(data.results || []);
+  if (useEmbedAPI) {
+    // Embed.su doesn’t support search, so filter client-side
+    const movies = await fetchAPI("https://embed.su/list/movie.json");
+    const tv = await fetchAPI("https://embed.su/list/tv.json");
+    const combined = [...(movies || []), ...(tv || [])];
+    const filtered = combined.filter((item) =>
+      (item.title || item.name || "")
+        .toLowerCase()
+        .includes(query.toLowerCase())
+    );
+    displayResults(filtered);
+  } else {
+    const url = `${tmdbUrl}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(
+      query
+    )}`;
+    const data = await fetchAPI(url);
+    displayResults(data.results || []);
+  }
 }
 
 function displayResults(results) {
-  bigDiv.innerHTML = results.length ? "" : "<p style='text-align:center;'>No results found.</p>";
-  results.forEach(item => {
-    if (item.poster_path) {
-      const card = createCard(item);
-      bigDiv.appendChild(card);
-    }
+  bigDiv.innerHTML = results.length
+    ? ""
+    : "<p style='text-align:center;'>No results found.</p>";
+  results.forEach((item) => {
+    const card = createCard(item);
+    bigDiv.appendChild(card);
   });
 }
 
-// --- TV Modal ---
+// --- TV Modal (TMDB only) ---
 async function showTVModal(tvId, title) {
   currentTV = tvId;
   currentTitle = title;
@@ -99,32 +149,39 @@ async function showTVModal(tvId, title) {
 
   const url = `${tmdbUrl}/tv/${tvId}?api_key=${apiKey}`;
   const show = await fetchAPI(url);
-  const seasons = show.seasons.filter(s => s.season_number > 0);
-  
-  seasons.forEach(s => {
+  const seasons = show.seasons.filter((s) => s.season_number > 0);
+
+  seasons.forEach((s) => {
     const btn = document.createElement("button");
     btn.textContent = `Season ${s.season_number}`;
-    btn.addEventListener("click", () => loadEpisodes(tvId, s.season_number, btn));
+    btn.addEventListener("click", () =>
+      loadEpisodes(tvId, s.season_number, btn)
+    );
     seasonList.appendChild(btn);
   });
 
-  if (seasons.length) loadEpisodes(tvId, seasons[0].season_number, seasonList.firstChild);
+  if (seasons.length)
+    loadEpisodes(tvId, seasons[0].season_number, seasonList.firstChild);
 }
 
 async function loadEpisodes(tvId, seasonNumber, activeBtn) {
-  // Highlight selected season
-  Array.from(seasonList.children).forEach(b => b.classList.remove("active"));
+  Array.from(seasonList.children).forEach((b) => b.classList.remove("active"));
   activeBtn.classList.add("active");
   episodeList.innerHTML = "";
 
   const url = `${tmdbUrl}/tv/${tvId}/season/${seasonNumber}?api_key=${apiKey}`;
   const seasonData = await fetchAPI(url);
 
-  seasonData.episodes.forEach(ep => {
+  seasonData.episodes.forEach((ep) => {
     const btn = document.createElement("button");
     btn.textContent = `Episode ${ep.episode_number}: ${ep.name}`;
     btn.addEventListener("click", () => {
-      const embedUrl = generateEmbedUrl(tvId, "tv", seasonNumber, ep.episode_number);
+      const embedUrl = generateEmbedUrl(
+        tvId,
+        "tv",
+        seasonNumber,
+        ep.episode_number
+      );
       openIframe(embedUrl, `${currentTitle} - S${seasonNumber}E${ep.episode_number}`);
       closeTVModal();
     });
@@ -154,14 +211,14 @@ function closeIframe() {
 document.getElementById("apiToggle").addEventListener("change", (e) => {
   useEmbedAPI = e.target.checked;
   console.log(`Using ${useEmbedAPI ? "Embed.su" : "TMDB"} API`);
-  loadHomeContent(); // Reload the content to reflect the API change
+  loadHomeContent();
 });
 
 // --- Init ---
 document.addEventListener("DOMContentLoaded", () => {
   loadHomeContent();
 
-  searchBar.addEventListener("keypress", e => {
+  searchBar.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       const query = searchBar.value.trim();
       if (query) searchMedia(query);
