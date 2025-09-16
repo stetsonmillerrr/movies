@@ -11,6 +11,145 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
+/* General styling */
+body {
+  font-family: 'Arial', sans-serif;
+  background: #f4f4f4;
+  color: #333;
+  padding: 20px;
+}
+
+.searchbar {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+}
+
+/* API Toggle (modern style) */
+.checkbox:checked ~ .block {
+  background-color: #3b82f6; /* Blue */
+}
+
+.checkbox:checked ~ .block .dot {
+  transform: translateX(100%);
+}
+
+.checkbox:checked ~ .block {
+  border-color: #3b82f6;
+}
+
+.checkbox:focus-visible {
+  outline: none;
+}
+
+.block {
+  position: relative;
+  cursor: pointer;
+  background-color: #ddd;
+  border-radius: 9999px;
+  transition: all 0.3s ease-in-out;
+}
+
+.block .dot {
+  position: absolute;
+  left: 1px;
+  top: 1px;
+  background-color: #fff;
+  border-radius: 9999px;
+  transition: all 0.3s ease-in-out;
+}
+
+.results-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.result-card {
+  background: #fff;
+  width: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.result-card img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+}
+
+.result-card .card-info {
+  padding: 10px;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.card-meta {
+  font-size: 14px;
+  color: #666;
+}
+
+.tv-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 600px;
+  max-width: 90%;
+  overflow-y: auto;
+}
+
+.close-btn {
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.close-btn:hover {
+  background: #d32f2f;
+}
+
+.iframe-container {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  justify-content: center;
+  align-items: center;
+}
+
+.fullscreen-iframe {
+  width: 80%;
+  height: 80%;
+  border: none;
+}
+
 body { font-family:'Inter',sans-serif; background:linear-gradient(to bottom,#0d1117,#161b22); transition:background-color 0.3s,color 0.3s; }
 .animate-fadeIn { animation:fadeIn 0.3s ease forwards; }
 @keyframes fadeIn { from { opacity:0; transform:scale(0.98);} to { opacity:1; transform:scale(1);} }
@@ -229,6 +368,41 @@ body { font-family:'Inter',sans-serif; background:linear-gradient(to bottom,#0d1
       </div>
     </label>
   </div>
+</div>
+
+<!-- API Switcher UI (Modern Toggle) -->
+<div class="flex justify-center mb-6">
+  <!-- Embed.su API Toggle -->
+  <label class="flex items-center cursor-pointer justify-between">
+    <span class="text-white font-medium">Embed.su API</span>
+    <div class="relative">
+      <input type="checkbox" id="apiToggle" class="checkbox hidden">
+      <div class="block border-[1px] border-gray-900 dark:border-white w-14 h-8 rounded-full"></div>
+      <div class="dot absolute left-1 top-1 bg-gray-800 dark:bg-white w-6 h-6 rounded-full transition"></div>
+    </div>
+  </label>
+</div>
+
+<!-- Search Bar -->
+<input type="text" id="searchbar" placeholder="Search for Movies or TV Shows" class="searchbar mb-6">
+
+<!-- Results Container -->
+<div id="bigDiv" class="results-container"></div>
+
+<!-- TV Modal -->
+<div id="tvModal" class="tv-modal">
+  <div class="modal-content">
+    <h2 id="iframeTitle"></h2>
+    <div id="seasonList" class="season-list"></div>
+    <div id="episodeList" class="episode-list"></div>
+    <button onclick="closeTVModal()" class="close-btn">Close</button>
+  </div>
+</div>
+
+<!-- Iframe Container -->
+<div id="iframeContainer" class="iframe-container">
+  <iframe id="fullscreenIframe" src="" frameborder="0" class="fullscreen-iframe"></iframe>
+  <button onclick="closeIframe()" class="close-btn">Close</button>
 </div>
 
 <!-- Fullscreen Player -->
