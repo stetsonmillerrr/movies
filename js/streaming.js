@@ -1,250 +1,145 @@
+const bigDiv = document.getElementById("bigDiv");
+const searchBar = document.getElementById("searchbar");
+const iframeContainer = document.getElementById("iframeContainer");
+const fullscreenIframe = document.getElementById("fullscreenIframe");
+const iframeTitle = document.getElementById("iframeTitle");
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
+// TV modal
+const tvModal = document.getElementById("tvModal");
+const seasonList = document.getElementById("seasonList");
+const episodeList = document.getElementById("episodeList");
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MFMTWB2DBE"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+let currentTV = null;
+let currentTitle = null;
 
-      gtag('config', 'G-MFMTWB2DBE');
-    </script>
-
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Streaming</title>
-<link rel="stylesheet" href="css/styles.css" />
-<script src="js/streaming.js" defer></script>
-<style>
-  /* Body and header */
-  body {
-    background-color: #121212;
-    color: #c9d1d9;
-    margin: 0;
-    font-family: Arial, sans-serif;
+// --- Load Trending Home ---
+async function loadHomeContent() {
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=9a2954cb0084e80efa20b3729db69067`);
+    const data = await res.json();
+    displayResults(data.results || []);
+  } catch (err) {
+    console.error(err);
   }
-  header {
-    background: #161b22;
-    padding: 20px;
-    text-align: center;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    border-bottom: 2px solid #2f81f7;
+}
+
+// --- Search Media ---
+async function searchMedia(query) {
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=9a2954cb0084e80efa20b3729db69067&query=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    displayResults(data.results || []);
+  } catch(err) {
+    console.error(err);
   }
-  #searchbar {
-    width: 60%;
-    max-width: 400px;
-    padding: 10px;
-    border-radius: 6px;
-    border: none;
-    font-size: 16px;
+}
+
+// --- Display results ---
+function displayResults(results) {
+  bigDiv.innerHTML = "";
+  if (!results.length) {
+    bigDiv.innerHTML = "<p style='text-align:center;'>No results found.</p>";
+    return;
   }
 
-  /* Results Grid */
-  #bigDiv {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 20px;
-    gap: 20px;
-  }
+  results.forEach(item => {
+    if (!item.poster_path) return;
+    const poster = `https://image.tmdb.org/t/p/w500/${item.poster_path}`;
+    const rating = item.vote_average ? `⭐ ${Math.round(item.vote_average*10)/10}` : "";
+    const year = item.release_date ? item.release_date.slice(0,4) : item.first_air_date ? item.first_air_date.slice(0,4) : "N/A";
 
-  .result-card {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 12px;
-    width: 180px;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
+    const card = document.createElement("div");
+    card.className = "result-card";
+    card.innerHTML = `
+      <div class="poster-container"><img src="${poster}" alt="${item.title || item.name}"></div>
+      <div class="card-info">
+        <div class="card-title">${item.title || item.name}</div>
+        <div class="card-meta"><span>${rating}</span><span>${year}</span></div>
+      </div>
+    `;
+    card.addEventListener("click", () => {
+      if(item.media_type === "tv") showTVModal(item.id, item.name || item.title);
+      else openIframe(`https://stuffgoogle.vercel.app/W/customsource?id=${item.id}&type=movie`, item.title || item.name);
+    });
+    bigDiv.appendChild(card);
+  });
+}
 
-  .result-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-  }
+// --- TV Modal ---
+async function showTVModal(tvId, title) {
+  currentTV = tvId;
+  currentTitle = title;
+  seasonList.innerHTML = "";
+  episodeList.innerHTML = "";
+  tvModal.style.display = "flex";
 
-  .poster-container img {
-    width: 100%;
-    border-bottom: 1px solid #30363d;
-  }
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/tv/${tvId}?api_key=9a2954cb0084e80efa20b3729db69067`);
+    const show = await res.json();
+    const seasons = show.seasons.filter(s => s.season_number > 0);
 
-  .card-info {
-    padding: 0.6rem;
-  }
+    seasons.forEach(s => {
+      const btn = document.createElement("button");
+      btn.textContent = `Season ${s.season_number}`;
+      btn.addEventListener("click", () => loadEpisodes(tvId, s.season_number, btn));
+      seasonList.appendChild(btn);
+    });
 
-  .card-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #2f81f7;
-    margin: 0 0 0.3rem 0;
+    if(seasons.length) loadEpisodes(tvId, seasons[0].season_number, seasonList.firstChild);
+  } catch(err) {
+    console.error(err);
   }
+}
 
-  .card-meta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85rem;
-    color: #8b949e;
-  }
+async function loadEpisodes(tvId, seasonNumber, activeBtn) {
+  // Highlight selected season
+  Array.from(seasonList.children).forEach(b => b.classList.remove("active"));
+  activeBtn.classList.add("active");
 
-  /* Fullscreen iframe modal */
-  #iframeContainer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: #0d1117;
-    display: none;
-    flex-direction: column;
-    z-index: 9999;
-  }
+  episodeList.innerHTML = "";
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/tv/${tvId}/season/${seasonNumber}?api_key=9a2954cb0084e80efa20b3729db69067`);
+    const seasonData = await res.json();
 
-  #iframeTopBar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #161b22;
-    padding: 0.8rem 1rem;
-    border-bottom: 2px solid #2f81f7;
+    seasonData.episodes.forEach(ep => {
+      const btn = document.createElement("button");
+      btn.textContent = `Episode ${ep.episode_number}: ${ep.name}`;
+      btn.addEventListener("click", () => {
+        const url = `https://stuffgoogle.vercel.app/W/customsource?id=${tvId}&type=tv&season=${seasonNumber}&episode=${ep.episode_number}`;
+        openIframe(url, `${currentTitle} - S${seasonNumber}E${ep.episode_number}`);
+        closeTVModal();
+      });
+      episodeList.appendChild(btn);
+    });
+  } catch(err) {
+    console.error(err);
   }
+}
 
-  #iframeTopBar h2 {
-    margin: 0;
-    font-size: 1.2rem;
-    color: #2f81f7;
-  }
+function closeTVModal() {
+  tvModal.style.display = "none";
+  seasonList.innerHTML = "";
+  episodeList.innerHTML = "";
+}
 
-  #iframeTopBar button {
-    background: none;
-    border: 1px solid #2f81f7;
-    color: #2f81f7;
-    border-radius: 6px;
-    padding: 0.3rem 0.6rem;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
+// --- Iframe functions ---
+function openIframe(url, title="Now Playing") {
+  fullscreenIframe.src = url;
+  iframeTitle.textContent = title;
+  iframeContainer.style.display = "flex";
+}
+function closeIframe() {
+  fullscreenIframe.src = "";
+  iframeContainer.style.display = "none";
+}
 
-  #iframeTopBar button:hover {
-    background: #2f81f7;
-    color: #fff;
-  }
-
-  #fullscreenIframe {
-    flex: 1;
-    width: 100%;
-    border: none;
-  }
-
-  /* TV Modal with seasons/episodes (no middle bar) */
-  #tvModal {
-    display: none;
-    position: fixed;
-    top:0; left:0; width:100vw; height:100vh;
-    background: rgba(0,0,0,0.95);
-    z-index: 10000;
-    justify-content: center;
-    align-items: center;
-  }
-  #tvModal .modal-content {
-    background: #161b22;
-    padding: 20px;
-    border-radius: 12px;
-    width: 500px;
-    max-width: 90vw;
-    display: flex;
-    color: white;
-    height: 400px;
-  }
-  #tvModal .seasons {
-    width: 40%;
-    overflow-y: auto;
-  }
-  #tvModal .seasons button {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 6px;
-    border: none;
-    background: #2a2a2a;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  #tvModal .seasons button:hover,
-  #tvModal .seasons button.active {
-    background: #2f81f7;
-    color: white;
-  }
-  #tvModal .episodes {
-    width: 60%;
-    padding-left: 10px;
-    overflow-y: auto;
-  }
-  #tvModal .episodes button {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 6px;
-    border: none;
-    background: #2a2a2a;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  #tvModal .episodes button:hover {
-    background: #2f81f7;
-  }
-  #tvModal .closeBtn {
-    position: absolute;
-    top: 10px; right: 15px;
-    background: #333;
-    border: none;
-    color: white;
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 6px;
-  }
-</style>
-</head>
-<body>
-<header>
-  <h1>Streaming Hub</h1>
-  <input id="searchbar" type="text" placeholder="Search Movies or TV Shows..." autofocus />
-</header>
-
-<div id="bigDiv"></div>
-
-<!-- TV Modal for Season/Episode selection -->
-<div id="tvModal">
-  <button class="closeBtn" onclick="closeTvModal()">Close</button>
-  <div class="modal-content">
-    <div class="seasons" id="seasonList"></div>
-    <div class="episodes" id="episodeList"></div>
-  </div>
-</div>
-
-<!-- Fullscreen iframe modal -->
-<div id="iframeContainer">
-  <div id="iframeTopBar">
-    <h2 id="iframeTitle">Now Playing</h2>
-    <button onclick="closeIframe()">Close</button>
-  </div>
-  <iframe id="fullscreenIframe" allowfullscreen></iframe>
-</div>
-
-<!-- TV Modal -->
-<div id="tvModal">
-  <button class="closeBtn" onclick="closeTVModal()">Close</button>
-  <div class="modal-content">
-    <div class="seasons" id="seasonList"></div>
-    <div class="episodes" id="episodeList"></div>
-  </div>
-</div>
-
-</body>
-</html>
+// --- Init ---
+document.addEventListener("DOMContentLoaded", () => {
+  loadHomeContent();
+  searchBar.addEventListener("keypress", e => {
+    if(e.key === "Enter") {
+      const query = searchBar.value.trim();
+      if(query) searchMedia(query);
+    }
+  });
+});
